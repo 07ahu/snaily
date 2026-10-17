@@ -41,7 +41,8 @@ function tick(t){if(!writeOn){running=false;return}requestAnimationFrame(tick);
  sh.material.opacity=.7-Math.abs(bob)*2;r.render(scene,cam)}
 const dots=document.getElementById('dots');
 D.forEach((d,i)=>{const b=document.createElement('button');b.className='dot'+(i?'':' on');b.style.setProperty('--c',d.bg);b.setAttribute('aria-label','design '+(i+1));
- b.onclick=()=>{st.d=i;[...dots.children].forEach((x,j)=>x.classList.toggle('on',j==i));front()};dots.append(b)});
+ b.onclick=()=>{pickDesign(i);Store.save({design:i})};dots.append(b)});
+function pickDesign(i){st.d=i;[...dots.children].forEach((x,j)=>x.classList.toggle('on',j==i));front()}
 let dx0=0,dy0=0,tt=0,auto=false,blink=true,lift=0;
 const ed=document.getElementById('ed'),R={txt:{x:90,y:152,w:760,h:H-240,lh:84},to:{x:985,y:392,w:300,h:290,lh:96}},v3=new THREE.Vector3();
 const scr=(u,v)=>{v3.set((.5-u/W)*3.4,(.5-v/H)*2.3,-.026);card.localToWorld(v3);v3.project(cam);return[(v3.x+1)/2*stage.clientWidth,(1-v3.y)/2*stage.clientHeight]};
@@ -52,7 +53,7 @@ function place(k){const g=R[k],[x0,y0]=scr(g.x,g.y),[x1,y1]=scr(g.x+g.w,g.y+g.h)
  Object.assign(ed.style,{display:'block',left:x0+'px',top:y0+'px',width:(x1-x0)+'px',height:(y1-y0)+'px',fontSize:Math.max(16,58*s)+'px',lineHeight:g.lh*s+'px'})}
 function edit(k){editing=k;ed.dataset.k=k;place(k);
  ed.value=st[k];ed.placeholder=k=='txt'?'dear you,':'to:';ed.maxLength=k=='txt'?260:60;
- ed.oninput=()=>{if(k=='to')ed.value=ed.value.split('\n').slice(0,3).join('\n');st[k]=ed.value;blink=true;back()};
+ ed.oninput=()=>{if(k=='to')ed.value=ed.value.split('\n').slice(0,3).join('\n');st[k]=ed.value;Store.save(k=='to'?{to:ed.value}:{message:ed.value});blink=true;back()};
  ed.focus();ed.setSelectionRange(ed.value.length,ed.value.length);blink=true;back()}
 ed.onblur=()=>{ed.style.display='none';editing=null;back()};ed.onkeydown=e=>{if(/^(Arrow|Home|End|Page)/.test(e.key))e.preventDefault()};
 function tap(cx,cy){if(!settled())return;if(!onBack()){vy=.34;return}
@@ -61,5 +62,13 @@ function tap(cx,cy){if(!settled())return;if(!onBack()){vy=.34;return}
 let running=false,writeOn=false,ready=false;
 function run(){if(!ready||!writeOn)return;size();if(!running){running=true;requestAnimationFrame(tick)}}
 function setWrite(v){writeOn=v;if(v)run();else if(document.activeElement===ed)ed.blur()}
-function start(){ready=true;front();back();run()}
+function start(){Store.load().then(d=>{st.to=d.to||'';st.txt=d.message||'';pickDesign(D[d.design]?d.design:0);ready=true;back();run()})}
+/* for the send-to-envelope flight (js/send.js) */
+function cardIdle(){return settled()}
+function settleCard(){vy=0;if(document.activeElement===ed)ed.blur()}
+function hideCard(v){grp.visible=!v;sh.visible=!v}
+function cardShot(){
+ const src=(onBack()?cb:cf).toDataURL('image/jpeg',.9),b=stage.getBoundingClientRect();
+ const pts=[[0,0],[W,0],[0,H],[W,H]].map(([u,v])=>scr(u,v)),xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+ return{src,left:b.left+Math.min(...xs),top:b.top+Math.min(...ys),width:Math.max(...xs)-Math.min(...xs),height:Math.max(...ys)-Math.min(...ys)}}
 img.onload=()=>Promise.all([document.fonts.load('600 40px Fraunces'),document.fonts.load('500 40px Caveat')]).catch(()=>{}).then(start);img.src=SNAIL;

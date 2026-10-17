@@ -16,5 +16,11 @@ Hosted on Vercel via Git import: every push to `main` deploys to production, and
 
 ## Structure
 
-- `index.html`: the whole app: stamp intro, header, bottom nav and four views (`#home`, `#write`, `#gallery`, `#settings`)
+- `index.html`: the markup: header, bottom nav and the views (`#home`, `#write`, `#board`, `#sent`, `#gallery`, `#settings`)
+- `css/app.css`: all styles
+- `js/postcard.js`: the 3D postcard (three.js)
+- `js/shell.js`: routing, nav, settings and the stamp intro
+- `js/store.js`: the local draft (postcard, photos, captions) in IndexedDB, plus photo resizing
+- `js/board.js`: the photo board: collage, drag, tap-to-focus caption bubble
+- `js/send.js`: the postcard-into-envelope animation
 - `images/`: artwork cropped and recolored from the originals in `images/source/` (`*-dark.png` are the dark-mode versions)

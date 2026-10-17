@@ -33,11 +33,23 @@
   </section>
 
   <section class="view" id="v-write" aria-label="Write a postcard">
+    <button class="env" id="env" aria-label="Put the postcard in the envelope and add photos"><span class="env-badge" hidden></span></button>
     <div id="stage"><canvas id="gl" aria-label="3D postcard. Drag to spin it."></canvas><textarea id="ed" aria-label="write on the card" spellcheck="false"></textarea></div>
     <div class="bar">
       <div class="row" id="dots"></div>
-      <div class="row"><button class="btn" id="flip">flip</button></div>
+      <div class="row"><button class="btn" id="flip">flip</button><button class="btn solid" id="next">next →</button></div>
     </div>
+  </section>
+
+  <section class="view" id="v-board" aria-label="Photo board">
+    <div class="board-head"><h2 id="bDate">today</h2><span class="muted" id="bCount"></span></div>
+    <div class="board" id="board"></div>
+    <input type="file" id="bFile" accept="image/*" multiple hidden>
+    <div class="board-foot"><button class="btn solid" id="bNext" disabled>next →</button></div>
+  </section>
+
+  <section class="view" id="v-sent" aria-label="Review and send">
+    <div class="empty"><h2>review &amp; send</h2><p class="muted">coming next.</p></div>
   </section>
 
   <section class="view" id="v-gallery" aria-label="Postcards">
@@ -63,10 +75,27 @@
   <button class="tab t-home" data-go="home" aria-label="Home"><i></i></button>
   <button class="tab t-settings" data-go="settings" aria-label="Settings"><i></i></button>
 </nav>
+<div class="focus" id="focus" hidden>
+  <div class="scrim" id="fScrim"></div>
+  <div class="f-body" role="dialog" aria-modal="true" aria-label="Photo and caption">
+    <img class="f-photo" id="fPhoto" alt="">
+    <div class="bubble" id="fBubble">
+      <svg class="tail" viewBox="0 0 40 26" aria-hidden="true"><path d="M3 25 C12 18 18 9 20 2 C24 10 30 18 38 25" /></svg>
+      <label class="sr" for="fCap">caption</label>
+      <textarea id="fCap" rows="3" maxlength="120" placeholder="what happened here?" spellcheck="true"></textarea>
+      <span class="count" id="fCount" aria-hidden="true"></span>
+    </div>
+    <div class="f-actions"><button class="link" id="fReplace">replace</button><button class="link" id="fRemove">remove</button><button class="btn solid" id="fDone">done</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="intro" aria-hidden="true"><div id="shake"><div class="ink"></div><div id="stampWrap"><div class="stamp full"></div><div class="stamp empty"></div></div></div></div>
 <div id="fly" aria-hidden="true"><div class="fx"><div class="fy"><div class="fs"><div class="fq"><div class="fr"></div></div></div></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/store.js"></script>
 <script src="js/postcard.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/board.js"></script>
+<script src="js/send.js"></script>
 </body>
 </html>

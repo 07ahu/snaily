@@ -1,13 +1,13 @@
 /* ---------- app shell: routing, nav, settings ---------- */
-const VIEWS=['home','write','gallery','settings'],body=document.body;
+const VIEWS=['home','write','board','sent','gallery','settings'],PARENT={write:'home',board:'write',sent:'board'},body=document.body;
 const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
 function route(){const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'home';
  $$('.view').forEach(el=>el.classList.toggle('on',el.id==='v-'+v));
- $$('.tab').forEach(t=>{const cur=t.dataset.go===(v==='write'?'home':v);cur?t.setAttribute('aria-current','page'):t.removeAttribute('aria-current')});
- $('#back').hidden=v!=='write';setWrite(v==='write')}
+ $$('.tab').forEach(t=>{const cur=t.dataset.go===(PARENT[v]?'home':v);cur?t.setAttribute('aria-current','page'):t.removeAttribute('aria-current')});
+ $('#back').hidden=!PARENT[v];setWrite(v==='write');dispatchEvent(new CustomEvent('snaily:view',{detail:v}))}
 addEventListener('hashchange',route);
 $$('.tab').forEach(t=>t.onclick=()=>{location.hash=t.dataset.go});
-$('#back').onclick=()=>{location.hash='home'};
+$('#back').onclick=()=>{const v=location.hash.slice(1);location.hash=PARENT[v]||'home'};
 const h=new Date().getHours();$('#greet').textContent=h<12?'good morning':h<18?'good afternoon':'good evening';
 $$('[data-box]').forEach(b=>b.onclick=()=>{$$('[data-box]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#emptyMsg').textContent=`no ${b.dataset.box} postcards yet.`});
 function setTheme(v,save){const r=document.documentElement;v==='system'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',v);
@@ -28,7 +28,9 @@ route();
  function finish(){if(done)return;done=true;removeEventListener('keydown',finish);
   document.getAnimations().forEach(a=>{const t=a.effect&&a.effect.target;if(t&&(ov.contains(t)||fly.contains(t)))a.cancel()});
   ov.remove();fly.remove();logo.style.visibility='';body.classList.remove('intro');body.classList.add('reveal');setTimeout(()=>body.classList.remove('reveal'),900)}
- ov.addEventListener('pointerdown',finish);addEventListener('keydown',finish);
+ // a tap that skips the intro must not also click whatever is underneath
+ ov.addEventListener('pointerdown',()=>{const t=performance.now(),eat=e=>{if(performance.now()-t<500){e.stopPropagation();e.preventDefault()}removeEventListener('click',eat,true)};addEventListener('click',eat,true);finish()});
+ addEventListener('keydown',finish);
  const load=src=>new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=src});
  const bg=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim().replace(/^url\(["']?|["']?\)$/g,'');
  Promise.race([Promise.all(['--stamp','--stamp-empty','--snail'].map(v=>load(bg(v)))),wait(1500)]).then(go);
