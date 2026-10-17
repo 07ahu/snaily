@@ -1,0 +1,10 @@
+{
+  "name": "snaily",
+  "short_name": "snaily",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2EDBD",
+  "theme_color": "#F2EDBD",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

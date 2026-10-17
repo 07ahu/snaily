@@ -3,25 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>postcard</title>
+<title>snaily</title>
+<meta name="theme-color" content="#F2EDBD" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#6C2C25" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="snaily">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F2EDBD;--tx:#6C2C25;--red:#EB5E3A;--blue:#7CA2E0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#F2EDBD;--tx:#6C2C25;--red:#EB5E3A;--blue:#7CA2E0;box-sizing:border-box}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#6C2C25;--tx:#F2EDBD}}
 :root[data-theme="dark"]{--bg:#6C2C25;--tx:#F2EDBD}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--tx);font-family:Fraunces,Georgia,serif;display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
-#stage{flex:1;min-height:56vh;position:relative}
+html{height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Fraunces,Georgia,serif;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#stage{flex:1;min-height:0;position:relative;margin-top:env(safe-area-inset-top,0px)}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
-.bar{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 16px 28px}
+.bar{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 16px calc(24px + env(safe-area-inset-bottom,0px))}
 .bar p{margin:0;font-size:14px;opacity:.75}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
-.dot{width:34px;height:34px;border-radius:50%;border:3px solid var(--bg);outline:2px solid var(--tx);cursor:pointer;padding:0}
-.dot.on{outline:4px solid var(--red)}
-.btn{font:inherit;padding:.5em 1.2em;border-radius:99px;border:2px solid var(--tx);background:transparent;color:var(--tx);cursor:pointer}
-.dot:focus-visible,.btn:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
-#ed::placeholder{color:#6C2C25;opacity:.35}#ed{position:absolute;display:none;z-index:2;margin:0;padding:0;border:0;outline:0;resize:none;overflow:hidden;background:transparent;color:transparent;caret-color:transparent;opacity:0;pointer-events:none;font-family:Caveat,cursive;font-weight:500;white-space:pre-wrap;box-sizing:border-box}
+#dots{gap:2px}
+button{touch-action:manipulation}
+.dot{width:44px;height:44px;padding:0;border:0;background:transparent;position:relative;cursor:pointer;border-radius:50%}
+.dot::before{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--c);border:3px solid var(--bg);outline:2px solid var(--tx)}
+.dot.on::before{outline:4px solid var(--red)}
+.btn{font:inherit;font-size:18px;min-height:48px;min-width:160px;padding:0 1.4em;border-radius:99px;border:2px solid var(--tx);background:transparent;color:var(--tx);cursor:pointer}
+.dot:focus-visible::before,.btn:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+#ed::placeholder{color:#6C2C25;opacity:.35}#ed{position:absolute;display:none;z-index:2;margin:0;padding:0;border:0;outline:0;resize:none;overflow:hidden;background:transparent;color:transparent;caret-color:transparent;opacity:0;pointer-events:none;font-family:Caveat,cursive;font-weight:500;white-space:pre-wrap;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 
 </style>
 </head>
@@ -61,8 +72,9 @@ const edge=new THREE.MeshStandardMaterial({color:0xe9e1b0,roughness:.9}),face=m=
 const card=new THREE.Mesh(new THREE.BoxGeometry(3.4,2.3,.05),[edge,edge,edge,edge,face(tf),face(tb)]),grp=new THREE.Group();grp.add(card);scene.add(grp);
 const sc=document.createElement('canvas');sc.width=sc.height=128;{const g=sc.getContext('2d'),gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(60,20,15,.5)');gr.addColorStop(1,'rgba(60,20,15,0)');g.fillStyle=gr;g.fillRect(0,0,128,128)}
 const sh=new THREE.Mesh(new THREE.PlaneGeometry(4.4,2.2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=-1.85;scene.add(sh);
-function size(){const w=stage.clientWidth,h=stage.clientHeight;r.setSize(w,h,false);cam.aspect=w/h;cam.position.z=Math.max(7,3.4*1.35/(2*Math.tan(17.5*Math.PI/180)*cam.aspect));cam.updateProjectionMatrix()}
+function size(){const w=stage.clientWidth,h=stage.clientHeight;r.setSize(w,h,false);cam.aspect=w/h;cam.position.z=Math.max(cam.aspect<.8?5:7,3.4*(cam.aspect<.8?1.12:1.35)/(2*Math.tan(17.5*Math.PI/180)*cam.aspect));cam.updateProjectionMatrix()}
 addEventListener('resize',size);
+if(window.visualViewport){const vv=()=>{size();if(editing)place(editing)};visualViewport.addEventListener('resize',vv);visualViewport.addEventListener('scroll',vv)}
 let ry=0,rx=0,vy=0,vx=0,drag=false,px=0,py=0,hx=0,hy=0,thx=0,thy=0,t0=0;const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 canvas.addEventListener('pointerdown',e=>{e.preventDefault();vy=vx=0;drag=true;px=dx0=e.clientX;py=dy0=e.clientY;tt=performance.now();canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{const b=canvas.getBoundingClientRect();if(!drag)canvas.style.cursor=hit(e.clientX,e.clientY)?'text':'';thx=((e.clientX-b.left)/b.width-.5);thy=((e.clientY-b.top)/b.height-.5);
@@ -76,7 +88,7 @@ function tick(t){requestAnimationFrame(tick);
  grp.rotation.set(rx+hy*.22,ry+hx*.3,0);lift+=((drag?1:0)-lift)*.15;grp.position.y=bob+lift*.06;grp.scale.setScalar(1+lift*.04);
  sh.material.opacity=.7-Math.abs(bob)*2;r.render(scene,cam)}
 const dots=document.getElementById('dots');
-D.forEach((d,i)=>{const b=document.createElement('button');b.className='dot'+(i?'':' on');b.style.background=d.bg;b.setAttribute('aria-label','design '+(i+1));
+D.forEach((d,i)=>{const b=document.createElement('button');b.className='dot'+(i?'':' on');b.style.setProperty('--c',d.bg);b.setAttribute('aria-label','design '+(i+1));
  b.onclick=()=>{st.d=i;[...dots.children].forEach((x,j)=>x.classList.toggle('on',j==i));front()};dots.append(b)});
 let dx0=0,dy0=0,tt=0,auto=false,blink=true,lift=0;
 const ed=document.getElementById('ed'),R={txt:{x:90,y:152,w:760,h:H-240,lh:84},to:{x:985,y:392,w:300,h:290,lh:96}},v3=new THREE.Vector3();
@@ -84,8 +96,9 @@ const scr=(u,v)=>{v3.set((.5-u/W)*3.4,(.5-v/H)*2.3,-.026);card.localToWorld(v3);
 const settled=()=>!drag&&Math.abs(vy)<.012&&Math.abs(rx)<.03&&Math.abs(ry-Math.round(ry/Math.PI)*Math.PI)<.04;
 const onBack=()=>Math.abs(Math.round(ry/Math.PI))%2==1;
 const hit=(cx,cy)=>{if(!settled()||!onBack())return;const bb=canvas.getBoundingClientRect(),X=cx-bb.left,Y=cy-bb.top;for(const k in R){const g=R[k],[a,b2]=scr(g.x,g.y),[c,d]=scr(g.x+g.w,g.y+g.h);if(X>=a&&X<=c&&Y>=b2&&Y<=d)return k}};
-function edit(k){const g=R[k],[x0,y0]=scr(g.x,g.y),[x1,y1]=scr(g.x+g.w,g.y+g.h),s=(x1-x0)/g.w;
- editing=k;ed.dataset.k=k;Object.assign(ed.style,{display:'block',left:x0+'px',top:y0+'px',width:(x1-x0)+'px',height:(y1-y0)+'px',fontSize:58*s+'px',lineHeight:g.lh*s+'px'});
+function place(k){const g=R[k],[x0,y0]=scr(g.x,g.y),[x1,y1]=scr(g.x+g.w,g.y+g.h),s=(x1-x0)/g.w;
+ Object.assign(ed.style,{display:'block',left:x0+'px',top:y0+'px',width:(x1-x0)+'px',height:(y1-y0)+'px',fontSize:Math.max(16,58*s)+'px',lineHeight:g.lh*s+'px'})}
+function edit(k){editing=k;ed.dataset.k=k;place(k);
  ed.value=st[k];ed.placeholder=k=='txt'?'dear you,':'to:';ed.maxLength=k=='txt'?260:60;
  ed.oninput=()=>{if(k=='to')ed.value=ed.value.split('\n').slice(0,3).join('\n');st[k]=ed.value;blink=true;back()};
  ed.focus();ed.setSelectionRange(ed.value.length,ed.value.length);blink=true;back()}
