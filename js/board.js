@@ -13,6 +13,7 @@ const Board=(()=>{
   [[29,26,47,-6],[71,28,46,5],[32,71,46,4],[69,73,47,-4]],
   [[29,22,48,-7],[71,22,48,5],[50,50,50,-2],[28,78,47,5],[72,78,48,-5]],
   [[28,18,46,-6],[72,18,47,6],[30,50,47,4],[71,50,45,-4],[29,82,45,-3],[71,82,47,5]]];
+ const TAPES=['#EB5E3A','#7CA2E0','#D9C47A','#C9A36A'];
  const hash=s=>{let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0};
  const jitter=id=>((hash(id)%1000)/1000*2-1)*1.5;
  let layout=[],openIdx=-1,replaceIdx=-1,undo=null,toastT=null,dragEnd=0;
@@ -41,7 +42,7 @@ const Board=(()=>{
    el.append(e);e.querySelector('button').onclick=()=>pick(-1);return}
   const W=el.clientWidth,H=el.clientHeight;
   for(const[i,p]of ps.entries()){const f=layout[i],b=document.createElement('button');
-   b.className='ph';b.dataset.i=i;b.setAttribute('aria-label',`photo ${i+1}: ${p.caption||'no caption yet'}`);
+   b.className='ph';b.dataset.i=i;const hv=hash(p.id);b.style.setProperty('--tape',TAPES[hv%TAPES.length]);b.style.setProperty('--tr',((hv>>4)%9-4)+'deg');b.setAttribute('aria-label',`photo ${i+1}: ${p.caption||'no caption yet'}`);
    Object.assign(b.style,{left:f.x+'px',top:f.y+'px',width:f.w+'px',height:f.h+'px',zIndex:p.z||i+1,
     transform:`translate(${(p.nudge?.x||0)*W}px,${(p.nudge?.y||0)*H}px) rotate(${f.r}deg)`});
    const img=document.createElement('img');img.alt='';img.draggable=false;Store.url(p.blobId).then(u=>img.src=u);b.append(img);
