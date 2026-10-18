@@ -1,11 +1,12 @@
-/* ---------- next: the postcard flies into the envelope, then the photo board ----------
+/* ---------- next: the snail brings its envelope, the postcard drops in, then on to the photo board ----------
    The 3D card is swapped for a flat DOM copy of the side that's showing
-   (from its 2D texture canvas), which arcs over to the envelope, slips in
-   behind its front and the envelope gulps it down. */
+   (from its 2D texture canvas). The controls step aside, the snail pops up
+   with its envelope where they were, the card turns sideways and falls
+   through the slot, and the envelope drops down beside next on the board. */
 (function(){
- const env=$('#env'),view=$('#v-write'),badge=env.querySelector('.env-badge');
+ const env=$('#env'),view=$('#v-write'),bar=view.querySelector('.bar'),cname=$('#cname'),bEnv=$('#bEnv');
  /* the envelope's body in images/envelope.png, as fractions of the image */
- const BODY={l:.03,t:.575,r:.97,b:.975},GROW=2.1,TILT=-4;
+ const BODY={l:.03,t:.575,r:.97,b:.975};
  let busy=false;
  const anim=(el,kf,o)=>el.animate(kf,{fill:'forwards',...o});
  const done=a=>a.finished.catch(()=>{});
@@ -17,38 +18,47 @@
   settleCard();Store.save({design:st.d,to:st.to,message:st.txt});Store.flush();
   await waitIdle();
   if(matchMedia('(prefers-reduced-motion:reduce)').matches){
-   await done(anim($('#gl'),[{opacity:1},{opacity:0}],{duration:220}));
-   await done(env.animate([{transform:'scale(1)'},{transform:'scale(1.15)'},{transform:'scale(1)'}],{duration:260}));
-   return finish()}
+   await done(anim(view,[{opacity:1},{opacity:0}],{duration:220}));
+   location.hash='board';return finish()}
   const shot=cardShot(),vr=view.getBoundingClientRect(),mail=new Image();
   mail.className='mail';mail.alt='';mail.src=shot.src;
   Object.assign(mail.style,{left:shot.left-vr.left+'px',top:shot.top-vr.top+'px',width:shot.width+'px',height:shot.height+'px'});
-  view.append(mail);hideCard(true);
-  // the envelope wakes up and opens its mouth
-  const lift=anim(mail,[{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-12px) scale(1.03)'}],{duration:180,easing:'ease-out'});
-  await done(anim(env,[{transform:'scale(1) rotate(0)'},{transform:`scale(${GROW*1.06}) rotate(${TILT-2}deg)`,offset:.7},{transform:`scale(${GROW}) rotate(${TILT}deg)`}],{duration:300,easing:'cubic-bezier(.3,1.2,.5,1)'}));
+  view.append(mail);hideCard(true);view.style.overflow='hidden';
+  // the controls step aside and the snail pops up with its envelope
+  [bar,cname].forEach(el=>anim(el,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(14px)'}],{duration:200,easing:'ease-in'}));
+  const lift=anim(mail,[{transform:'none'},{transform:'translateY(-14px) scale(1.03)'}],{duration:220,easing:'ease-out'});
+  env.classList.add('on');
+  await done(anim(env,[{transform:'translateY(50px) scale(.4)',opacity:0},{transform:'translateY(-10px) scale(1.06)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.3,1.3,.5,1)'}));
   await done(lift);
-  // aim just above the slot, sized to slip inside
-  const er=env.getBoundingClientRect(),bw=(BODY.r-BODY.l)*er.width,bl=er.left+BODY.l*er.width,bt=er.top+BODY.t*er.height,bh=(BODY.b-BODY.t)*er.height;
-  const tw=bw*.78,th=tw*shot.height/shot.width,s=tw/shot.width;
-  const dx=bl+(bw-tw)/2-shot.left,dy=bt-th+2-shot.top;
+  // the tall card turns sideways and shrinks to fit the slot (once turned, its width on screen is its height)
+  const er=env.getBoundingClientRect(),bw=(BODY.r-BODY.l)*er.width,bh=(BODY.b-BODY.t)*er.height;
+  const slotX=er.left+(BODY.l+BODY.r)/2*er.width,slotY=er.top+BODY.t*er.height;
+  const s=Math.min(bw*.86/shot.height,(bh-6)/shot.width),lh=shot.width*s;
+  const dx=slotX-(shot.left+shot.width/2),dy=slotY-lh/2-4-(shot.top+shot.height/2);
+  const at=(y,r=90)=>`translate(${dx}px,${y}px) rotate(${r}deg) scale(${s})`;
   await done(anim(mail,[
-   {transform:'translate(0,-12px) scale(1.03) rotate(0deg)'},
-   {transform:`translate(${dx*.5}px,${dy*.5-70}px) scale(${(1.03+s)/2}) rotate(-12deg)`,offset:.5},
-   {transform:`translate(${dx}px,${dy}px) scale(${s}) rotate(${TILT}deg)`}],{duration:560,easing:'cubic-bezier(.45,.05,.35,1)'}));
-  // in it goes, behind the front of the envelope
-  const drop=Math.min(th+2,bh-2);
-  await done(anim(mail,[{transform:`translate(${dx}px,${dy}px) scale(${s}) rotate(${TILT}deg)`},{transform:`translate(${dx}px,${dy+drop}px) scale(${s}) rotate(${TILT}deg)`}],{duration:240,easing:'cubic-bezier(.6,0,.9,.6)'}));
+   {transform:'translateY(-14px) scale(1.03)'},
+   {transform:`translate(${dx*.4}px,${dy*.35-24}px) rotate(55deg) scale(${(1.03+s)/2})`,offset:.45},
+   {transform:at(dy)}],{duration:560,easing:'cubic-bezier(.45,.05,.35,1)'}));
+  // and falls through, behind the front of the envelope
+  await done(anim(mail,[{transform:at(dy)},{transform:at(dy+lh+6)}],{duration:240,easing:'cubic-bezier(.6,0,.9,.6)'}));
   mail.remove();
-  // gulp, then settle back into the corner
-  await done(anim(env,[{transform:`scale(${GROW}) rotate(${TILT}deg)`},{transform:`scale(${GROW*1.12},${GROW*.86}) rotate(${TILT}deg)`,offset:.35},{transform:`scale(${GROW*.94},${GROW*1.08}) rotate(${TILT+2}deg)`,offset:.7},{transform:`scale(${GROW}) rotate(${TILT}deg)`}],{duration:320}));
-  badge.hidden=false;
-  await done(anim(env,[{transform:`scale(${GROW}) rotate(${TILT}deg)`},{transform:'scale(.92) rotate(3deg)',offset:.75},{transform:'scale(1) rotate(0deg)'}],{duration:340,easing:'cubic-bezier(.4,0,.2,1)'}));
-  finish()}
+  await done(anim(env,[{transform:'none'},{transform:'scale(1.1,.86)',offset:.35},{transform:'scale(.95,1.07)',offset:.7},{transform:'none'}],{duration:320}));
+  // the envelope drops down to wait beside next on the photo board
+  const r0=env.getBoundingClientRect(),fly=document.createElement('div');fly.className='env-fly';
+  Object.assign(fly.style,{left:r0.left+'px',top:r0.top+'px',width:r0.width+'px',height:r0.height+'px'});
+  document.body.append(fly);env.classList.remove('on');bEnv.style.visibility='hidden';
+  location.hash='board';await frame();await frame();
+  const r1=bEnv.getBoundingClientRect(),k=r1.width/r0.width,tx=r1.left-r0.left,ty=r1.top-r0.top,go=(y,sc=k,r=0)=>`translate(${tx}px,${y}px) scale(${sc}) rotate(${r}deg)`;
+  await done(fly.animate([
+   {transform:'none'},
+   {transform:`translate(${tx*.45}px,${Math.min(0,ty)*.45-36}px) scale(${(1+k)/2}) rotate(-6deg)`,offset:.4,easing:'cubic-bezier(.5,0,.8,.4)'},
+   {transform:go(ty),offset:.8},
+   {transform:go(ty-7,k,3),offset:.9},
+   {transform:go(ty)}],{duration:640,fill:'forwards',easing:'cubic-bezier(.3,0,.5,1)'}));
+  bEnv.style.visibility='';fly.remove();finish()}
 
- function finish(){
-  location.hash='board';
-  setTimeout(()=>{env.getAnimations().forEach(a=>a.cancel());$('#gl').getAnimations().forEach(a=>a.cancel());hideCard(false);busy=false},50)}
- $('#next').onclick=send;env.onclick=send;
- Store.load().then(d=>{if(d.photos&&d.photos.length)badge.hidden=false});
+ // undo the flight's leftovers so the write view is ready if you come back
+ function finish(){setTimeout(()=>{[env,bar,cname,view,$('#gl')].forEach(e=>e.getAnimations().forEach(a=>a.cancel()));view.style.overflow='';env.classList.remove('on');bEnv.style.visibility='';hideCard(false);busy=false},50)}
+ $('#next').onclick=send;
 })();

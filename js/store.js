@@ -13,7 +13,7 @@ const Store=(()=>{
   return dbp}
  const store=async(name,mode='readonly')=>(await db()).transaction(name,mode).objectStore(name);
  const id=p=>p+Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
- const fresh=()=>{const now=new Date().toISOString();return{id:id('d_'),createdAt:now,updatedAt:now,design:0,to:'',message:'',photos:[]}};
+ const fresh=()=>{const now=new Date().toISOString();return{id:id('d_'),createdAt:now,updatedAt:now,design:0,paper:null,ink:null,stamp:0,to:'',message:'',photos:[]}};
 
  async function load(){
   if(draft)return draft;

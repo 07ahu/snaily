@@ -14,16 +14,15 @@
 <link rel="icon" href="images/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="preload" as="image" href="images/stamp.png">
-<link rel="preload" as="image" href="images/snail.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/open-sauce-sans@5.3.0/600.css" rel="stylesheet">
 <script>try{const t=localStorage.getItem('snaily-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body class="intro">
 <header class="top">
   <a class="brand" href="#home" aria-label="snaily home"><span id="logo" aria-hidden="true"></span><span class="word">snaily</span></a>
-  <button class="back" id="back" hidden>‹ back</button>
 </header>
 <main>
   <!-- WELCOME (home): kept minimal on purpose; add details here -->
@@ -32,12 +31,38 @@
     <a class="primary" href="#write">write a postcard</a>
   </section>
 
-  <section class="view" id="v-write" aria-label="Write a postcard">
-    <button class="env" id="env" aria-label="Put the postcard in the envelope and add photos"><span class="env-badge" hidden></span></button>
-    <div id="stage"><canvas id="gl" aria-label="3D postcard. Drag to spin it."></canvas><textarea id="ed" aria-label="write on the card" spellcheck="false"></textarea></div>
+  <section class="view" id="v-write" aria-label="Craft your postcard">
+    <!-- the snail and its envelope stay hidden until next: then the card drops in (js/send.js) -->
+    <div class="env" id="env" aria-hidden="true"></div>
+    <div class="craft-head">
+      <h2>Craft Your Postcard</h2>
+      <button class="shuffle" id="shuffle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c2.2 0 3.4 1.2 4.5 3l3 5c1 1.6 2.2 2 3.7 2H21M3 17h3c1.5 0 2.5-.6 3.4-1.6M21 7h-3.8c-1.5 0-2.5.6-3.4 1.6M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>randomize</button>
+    </div>
+    <div id="stage"><canvas id="gl" aria-label="Postcards. Swipe sideways for other designs, tap to flip."></canvas><textarea id="ed" aria-label="write on the card" spellcheck="false"></textarea></div>
+    <p class="cname" id="cname" aria-live="polite"></p>
     <div class="bar">
-      <div class="row" id="dots"></div>
-      <div class="row"><button class="btn" id="flip">flip</button><button class="btn solid" id="next">next →</button></div>
+      <p class="hint" id="hint" aria-hidden="true"></p>
+      <!-- back sits over the colours, next over the stamps: plain arrows with quiet words -->
+      <div class="acts">
+        <button class="act" id="wBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>back</span></button>
+        <button class="act" id="next" aria-label="next: add photos"><span>next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <!-- after Lost Post: colours on the left, stamps on the right -->
+      <div class="tray">
+        <div class="sec">
+          <h3 id="hColors">colors</h3>
+          <div class="sec-row" role="group" aria-labelledby="hColors">
+            <button class="swatch" id="cPaper" data-k="paper" aria-label="Paper color" title="paper" aria-haspopup="true" aria-expanded="false" aria-controls="pColors"></button>
+            <button class="swatch" id="cInk" data-k="ink" aria-label="Ink color" title="ink" aria-haspopup="true" aria-expanded="false" aria-controls="pColors"></button>
+          </div>
+          <div class="pop" id="pColors" role="group" hidden></div>
+        </div>
+        <div class="sec right">
+          <h3 id="hStamps">stamps</h3>
+          <div class="sec-row" id="sRow" role="group" aria-labelledby="hStamps"></div>
+          <div class="pop right" id="pStamps" role="group" aria-label="All stamps" hidden></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -45,7 +70,7 @@
     <div class="board-head"><h2 id="bDate">today</h2><span class="muted" id="bCount"></span></div>
     <div class="board" id="board"></div>
     <input type="file" id="bFile" accept="image/*" multiple hidden>
-    <div class="board-foot"><button class="btn solid" id="bNext" disabled>next →</button></div>
+    <div class="board-foot"><span class="benv" id="bEnv" aria-hidden="true"></span><button class="btn solid" id="bNext" disabled>next →</button></div>
   </section>
 
   <section class="view" id="v-sent" aria-label="Review and send">
@@ -93,8 +118,10 @@
 <div id="fly" aria-hidden="true"><div class="fx"><div class="fy"><div class="fs"><div class="fq"><div class="fr"></div></div></div></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/store.js"></script>
+<script src="js/designs.js"></script>
 <script src="js/postcard.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/craft.js"></script>
 <script src="js/board.js"></script>
 <script src="js/send.js"></script>
 </body>

@@ -4,10 +4,11 @@ const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
 function route(){const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'home';
  $$('.view').forEach(el=>el.classList.toggle('on',el.id==='v-'+v));
  $$('.tab').forEach(t=>{const cur=t.dataset.go===(PARENT[v]?'home':v);cur?t.setAttribute('aria-current','page'):t.removeAttribute('aria-current')});
- $('#back').hidden=!PARENT[v];setWrite(v==='write');dispatchEvent(new CustomEvent('snaily:view',{detail:v}))}
+ body.dataset.view=v;setWrite(v==='write');dispatchEvent(new CustomEvent('snaily:view',{detail:v}))}
 addEventListener('hashchange',route);
 $$('.tab').forEach(t=>t.onclick=()=>{location.hash=t.dataset.go});
-$('#back').onclick=()=>{const v=location.hash.slice(1);location.hash=PARENT[v]||'home'};
+// the write view has its own back, down by the colours
+const wBack=$('#wBack');if(wBack)wBack.onclick=()=>{location.hash='home'};
 const h=new Date().getHours();$('#greet').textContent=h<12?'good morning':h<18?'good afternoon':'good evening';
 $$('[data-box]').forEach(b=>b.onclick=()=>{$$('[data-box]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#emptyMsg').textContent=`no ${b.dataset.box} postcards yet.`});
 function setTheme(v,save){const r=document.documentElement;v==='system'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',v);
@@ -66,7 +67,8 @@ route();
   play(fx,[{transform:'translateX(0)'},{transform:`translateX(${px}px)`}],{duration:300,easing:'cubic-bezier(.2,.8,.3,1)'});
   await play(fy,[{transform:'translateY(0)'},{transform:`translateY(${py}px)`}],{duration:300,easing:'cubic-bezier(.2,.8,.3,1)'});
   if(done)return;
-  // 3. hop left into the header logo
+  // 3. hop left into the header logo (it only exists on home; elsewhere the snail just fades away)
+  if(!logo.getClientRects().length){play(fly,[{opacity:1},{opacity:0}],{duration:250});await play(ov,[{opacity:1},{opacity:0}],{duration:350});return finish()}
   const lr=logo.getBoundingClientRect(),dx=lr.left-x0,dy=lr.top-y0,sT=lr.width/bw;
   const hops=[{f:.62,g:.06,peak:90,d:360},{f:.96,g:.16,peak:60,d:320},{f:1,g:1,peak:46,d:440}];
   let pxs=px,pys=py,ps=P;

@@ -1,15 +1,20 @@
+/* Open Sauce Sans 400: Fontsource's woff2 for this weight is corrupt (no wOF2 header), so use its woff instead */
+@font-face{font-family:'Open Sauce Sans';font-style:normal;font-weight:400;font-display:swap;src:url(https://cdn.jsdelivr.net/npm/@fontsource/open-sauce-sans@5.3.0/files/open-sauce-sans-latin-400-normal.woff) format('woff')}
 :root{--bg:#F2EDBD;--tx:#6C2C25;--red:#EB5E3A;--blue:#7CA2E0;--line:rgba(108,44,37,.14);--ease:cubic-bezier(.2,.8,.2,1);box-sizing:border-box;
  --snail:url(/images/snail.png);--stamp:url(/images/stamp.png);--stamp-empty:url(/images/stamp-empty.png);
- --i-gallery:url(/images/nav-gallery.png);--i-home:url(/images/nav-home.png);--i-settings:url(/images/nav-settings.png);--envelope:url(/images/envelope.png)}
+ --i-gallery:url(/images/nav-gallery.png);--i-home:url(/images/nav-home.png);--i-settings:url(/images/nav-settings.png);--envelope:url(/images/envelope.png);
+ --pill:#fdfcf7;--pill-sh:43,16,12;--soft:rgba(43,16,12,.06);--sel:#6C2C25}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#6C2C25;--tx:#F2EDBD;--line:rgba(242,237,189,.16);
  --snail:url(/images/snail-dark.png);--stamp:url(/images/stamp-dark.png);--stamp-empty:url(/images/stamp-empty-dark.png);
- --i-gallery:url(/images/nav-gallery-dark.png);--i-home:url(/images/nav-home-dark.png);--i-settings:url(/images/nav-settings-dark.png);--envelope:url(/images/envelope-dark.png)}}
+ --i-gallery:url(/images/nav-gallery-dark.png);--i-home:url(/images/nav-home-dark.png);--i-settings:url(/images/nav-settings-dark.png);--envelope:url(/images/envelope-dark.png);
+ --pill:#7e382f;--pill-sh:20,6,4;--soft:rgba(255,255,255,.08);--sel:#B4584C}}
 :root[data-theme="dark"]{--bg:#6C2C25;--tx:#F2EDBD;--line:rgba(242,237,189,.16);
  --snail:url(/images/snail-dark.png);--stamp:url(/images/stamp-dark.png);--stamp-empty:url(/images/stamp-empty-dark.png);
- --i-gallery:url(/images/nav-gallery-dark.png);--i-home:url(/images/nav-home-dark.png);--i-settings:url(/images/nav-settings-dark.png);--envelope:url(/images/envelope-dark.png)}
+ --i-gallery:url(/images/nav-gallery-dark.png);--i-home:url(/images/nav-home-dark.png);--i-settings:url(/images/nav-settings-dark.png);--envelope:url(/images/envelope-dark.png);
+ --pill:#7e382f;--pill-sh:20,6,4;--soft:rgba(255,255,255,.08);--sel:#B4584C}
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--tx);font-family:Fraunces,Georgia,serif;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Open Sauce Sans',system-ui,sans-serif;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button{touch-action:manipulation;font:inherit;color:inherit}
 
 /* header */
@@ -17,7 +22,9 @@ button{touch-action:manipulation;font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:8px;color:var(--tx);text-decoration:none;border-radius:12px}
 #logo{width:49px;height:34px;background:var(--snail) center/contain no-repeat}
 .word{font-weight:600;font-size:24px;letter-spacing:-.01em}
-.back{margin-left:auto;min-height:44px;padding:0 10px;border:0;background:none;font-size:17px;cursor:pointer;border-radius:12px}
+/* the logo header belongs to home only */
+body:not([data-view="home"]) .top{display:none}
+body:not([data-view="home"]) main{padding-top:env(safe-area-inset-top,0px)}
 
 /* views */
 main{flex:1;min-height:0;position:relative}
@@ -39,12 +46,66 @@ main{flex:1;min-height:0;position:relative}
 #v-write{padding:0}
 #stage{flex:1;min-height:0;position:relative}
 canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
-.bar{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 16px 16px}
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
-#dots{gap:2px}
-.dot{width:44px;height:44px;padding:0;border:0;background:transparent;position:relative;cursor:pointer;border-radius:50%}
-.dot::before{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--c);border:3px solid var(--bg);outline:2px solid var(--tx)}
-.dot.on::before{outline:4px solid var(--red)}
+.bar{display:flex;flex-direction:column;align-items:center;gap:8px;padding:2px 16px 16px}
+/* craft header (after Lost Post): centred title with a randomize link under it */
+.craft-head{display:flex;flex-direction:column;align-items:center;padding:16px 16px 0}
+.craft-head h2{margin:0;font-size:24px;letter-spacing:-.01em;text-align:center}
+.shuffle{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:0;background:none;font-size:16px;cursor:pointer;border-radius:99px}
+.shuffle svg{width:18px;height:18px;fill:none;stroke:var(--red);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s var(--ease)}
+.shuffle:active svg{transform:rotate(180deg)}
+@media (hover:hover){.shuffle:hover svg{transform:rotate(180deg)}}
+.shuffle:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.cname{margin:0;text-align:center;font-size:15px;opacity:.7;min-height:1.3em}
+.hint{margin:0;font:500 21px/1.1 Caveat,cursive;opacity:.8;min-height:1.1em;text-align:center}
+/* back + next: worded pills lined up over the colours and stamps, so they read as actions, not card arrows */
+.acts{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:440px;padding:0 4px}
+.act{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 6px;border:0;border-radius:12px;background:transparent;color:var(--tx);font:600 16px/1 'Open Sauce Sans',system-ui,sans-serif;cursor:pointer;transition:transform .18s var(--ease)}
+.act span{opacity:.55}
+.act svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover){#wBack:hover{transform:translateX(-3px)}#next:hover{transform:translateX(3px)}}
+.act:active{transform:scale(.96)}
+.act:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+/* craft tray (after Lost Post): two labelled groups on the page itself, colours left and stamps right */
+.bar{gap:10px}
+.tray{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;width:100%;max-width:440px;padding:0 4px}
+.sec{position:relative;display:flex;flex-direction:column;gap:8px}
+.sec.right{align-items:flex-end}
+.sec h3{margin:0;font:600 11px/1 'Open Sauce Sans',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;opacity:.55}
+.sec-row{display:flex;gap:10px;align-items:center;height:52px}
+/* paper + ink: flat circles in the card's colours with a soft drop shadow */
+.swatch{width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;background:var(--c,#ccc);
+ box-shadow:inset 0 0 0 1px rgba(var(--pill-sh),.12),0 2px 3px rgba(var(--pill-sh),.12),0 8px 16px -8px rgba(var(--pill-sh),.5);transition:transform .18s var(--ease),box-shadow .18s var(--ease),background-color .25s}
+.swatch[aria-expanded="true"]{box-shadow:inset 0 0 0 1px rgba(var(--pill-sh),.12),0 0 0 3px var(--bg),0 0 0 5px var(--tx)}
+@media (hover:hover){.swatch:hover{transform:translateY(-2px)}}
+.swatch:active{transform:scale(.92)}
+/* stamps: soft paper tiles holding the stamp art; the chosen one gets a ring */
+.tile{position:relative;flex:none;width:52px;height:52px;padding:7px;border:0;border-radius:14px;cursor:pointer;background:#fbf8ec;touch-action:none;
+ box-shadow:0 0 0 1px rgba(var(--pill-sh),.06),0 2px 3px rgba(var(--pill-sh),.08),0 8px 16px -8px rgba(var(--pill-sh),.4);transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.tile img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 1.5px rgba(43,16,12,.25))}
+.tile[aria-pressed="true"]{box-shadow:0 0 0 3px var(--sel),0 8px 16px -8px rgba(var(--pill-sh),.4)}
+.tile.plus{touch-action:manipulation;display:grid;place-items:center;background:transparent;box-shadow:inset 0 0 0 2px var(--sel)}
+.tile.plus svg{width:22px;height:22px;fill:none;stroke:var(--sel);stroke-width:2.4;stroke-linecap:round}
+.tile.plus[aria-expanded="true"]{background:var(--soft)}
+@media (hover:hover){.tile:hover{transform:translateY(-2px) rotate(-3deg)}.tile.plus:hover{transform:translateY(-2px)}}
+.tile:active{transform:scale(.92)}
+.drag-ghost{position:fixed;left:0;top:0;z-index:90;width:72px;height:72px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 10px 12px rgba(43,16,12,.35))}
+/* popovers float above their group */
+.pop{position:absolute;z-index:6;bottom:calc(100% + 12px);left:0;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:10px 12px;border-radius:22px;background:var(--pill);transform-origin:24px 100%;
+ box-shadow:0 0 0 1px rgba(var(--pill-sh),.05),0 2px 6px rgba(var(--pill-sh),.06),0 24px 48px -14px rgba(var(--pill-sh),.32);animation:popIn .22s var(--ease)}
+.pop.right{left:auto;right:0;transform-origin:calc(100% - 24px) 100%;display:grid;grid-template-columns:repeat(3,52px);gap:10px;padding:12px}
+.pop.right[hidden]{display:none}
+.pop[hidden]{display:none}
+@keyframes popIn{from{opacity:0;transform:translateY(8px) scale(.94)}}
+.pop-k{font:600 10px/1 'Open Sauce Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.55;width:42px}
+.sws{display:flex;gap:7px}
+.sw{width:27px;height:27px;padding:0;border:0;border-radius:50%;cursor:pointer;background:var(--c);box-shadow:inset 0 0 0 1px rgba(var(--pill-sh),.12);transition:transform .15s var(--ease)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--pill),0 0 0 4px var(--tx)}
+@media (hover:hover){.sw:hover{transform:scale(1.1)}}
+.sw:active{transform:scale(.9)}
+.reset{flex:none;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:var(--soft);cursor:pointer;display:grid;place-items:center}
+.reset svg{width:16px;height:16px;fill:none;stroke:var(--tx);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.swatch:focus-visible,.sw:focus-visible,.tile:focus-visible,.reset:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.pop{animation:fadeOnly .15s}.swatch,.sw,.tile{transition:none}.swatch:hover,.sw:hover,.tile:hover{transform:none}}
 .btn{font:inherit;font-size:18px;min-height:48px;min-width:160px;padding:0 1.4em;border-radius:99px;border:2px solid var(--tx);background:transparent;color:var(--tx);cursor:pointer}
 #ed::placeholder{color:#6C2C25;opacity:.35}#ed{position:absolute;display:none;z-index:2;margin:0;padding:0;border:0;outline:0;resize:none;overflow:hidden;background:transparent;color:transparent;caret-color:transparent;opacity:0;pointer-events:none;font-family:Caveat,cursive;font-weight:500;white-space:pre-wrap;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 
@@ -66,7 +127,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor
 .tab:active i{transform:scale(.9);transition-duration:.08s}
 .t-gallery{--ic:var(--i-gallery)}.t-home{--ic:var(--i-home)}.t-settings{--ic:var(--i-settings)}
 
-.dot:focus-visible::before,.btn:focus-visible,.tab:focus-visible,.brand:focus-visible,.back:focus-visible,.primary:focus-visible,.seg button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.btn:focus-visible,.tab:focus-visible,.brand:focus-visible,.back:focus-visible,.primary:focus-visible,.seg button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 
 /* intro */
 #intro{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center}
@@ -97,18 +158,20 @@ body.reveal .view.on>*{animation:rise .5s var(--ease) both .08s}
 .btn.solid:disabled{opacity:.4;cursor:default}
 @media (hover:hover){.btn:not(:disabled):hover{transform:translateY(-2px)}.btn{transition:transform .18s var(--ease)}}
 .btn:not(:disabled):active{transform:scale(.96)}
-.env{position:absolute;z-index:4;top:2px;right:14px;width:52px;height:70px;padding:0;border:0;background:var(--envelope) center/contain no-repeat;cursor:pointer;border-radius:10px;transform-origin:100% 0}
-@media (hover:hover){.env:hover{transform:translateY(-2px) rotate(3deg)}.env{transition:transform .2s var(--ease)}}
-.env:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
-.env-badge{position:absolute;right:-2px;top:44%;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid var(--bg)}
-.mail{position:absolute;z-index:3;left:0;top:0;transform-origin:0 0;pointer-events:none;box-shadow:0 10px 24px -8px rgba(60,20,15,.45);border-radius:2px}
+.env{position:absolute;z-index:4;left:50%;bottom:20px;width:120px;height:162px;margin-left:-60px;background:var(--envelope) center bottom/contain no-repeat;pointer-events:none;visibility:hidden;transform-origin:50% 100%}
+.env.on{visibility:visible}
+/* the envelope on its way from the write view down to the photo board */
+.env-fly{position:fixed;z-index:65;background:var(--envelope) center bottom/contain no-repeat;transform-origin:0 0;pointer-events:none}
+/* it waits, solid, beside next on the board */
+.benv{flex:none;width:46px;height:62px;background:var(--envelope) center bottom/contain no-repeat}
+.mail{position:absolute;z-index:3;left:0;top:0;transform-origin:50% 50%;pointer-events:none;box-shadow:0 10px 24px -8px rgba(60,20,15,.45);border-radius:7.4%/5%}
 
 /* ===== photo board ===== */
 #v-board{padding:4px 16px 12px;gap:8px}
 .board-head{display:flex;align-items:baseline;justify-content:space-between}
 .board-head h2{margin:0}
 .board{flex:1;min-height:0;position:relative;touch-action:none}
-.board-foot{display:flex;justify-content:center;padding-top:4px}
+.board-foot{display:flex;justify-content:center;align-items:flex-end;gap:12px;padding-top:4px}
 /* print-style frame: warm paper mat, hairline ink edge, a lit top edge and a two-layer shadow (contact + ambient) */
 .ph{--mat:7px;position:absolute;padding:0;border:0;cursor:grab;border-radius:2px;touch-action:none;background:linear-gradient(168deg,#fffdf4 0%,#fbf6e6 55%,#f3ecd5 100%);box-shadow:0 0 0 1px rgba(108,44,37,.13),inset 0 1px 0 rgba(255,255,255,.85),0 1px 1px rgba(43,16,12,.10),0 3px 6px -2px rgba(43,16,12,.16),0 16px 28px -14px rgba(43,16,12,.42);transition:box-shadow .25s var(--ease)}
 .ph img{position:absolute;inset:var(--mat);width:calc(100% - 2*var(--mat));height:calc(100% - 2*var(--mat));object-fit:cover;border-radius:1px;pointer-events:none;-webkit-user-drag:none}
@@ -127,7 +190,7 @@ body.reveal .view.on>*{animation:rise .5s var(--ease) both .08s}
 .add:active{transform:scale(.92)}
 .add:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .board-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
-.board-empty .big{width:min(70%,260px);aspect-ratio:4/5;border:3px dashed var(--line);border-color:color-mix(in srgb,var(--tx) 35%,transparent);border-radius:14px;background:transparent;color:var(--tx);font:600 20px Fraunces,Georgia,serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.board-empty .big{width:min(70%,260px);aspect-ratio:4/5;border:3px dashed var(--line);border-color:color-mix(in srgb,var(--tx) 35%,transparent);border-radius:14px;background:transparent;color:var(--tx);font:600 18px 'Open Sauce Sans',system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .board-empty .big b{font-size:44px;font-weight:400;line-height:1}
 .board-empty .big:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 
@@ -157,3 +220,8 @@ body.reveal .view.on>*{animation:rise .5s var(--ease) both .08s}
 .toast button{border:0;background:none;color:var(--bg);font-weight:600;text-decoration:underline;min-height:36px;padding:0 10px;cursor:pointer}
 .toast:not(:has(button)){padding-right:18px}
 @media (prefers-reduced-motion:reduce){.add,.env,.btn{transition:none}.add:hover{transform:none}}
+
+/* ===== type: Instrument Serif for the big words, Open Sauce Sans for everything small ===== */
+.word,.greet,.view h2,.craft-head h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:0}
+.word{font-size:29px}.greet{font-size:44px}.view h2{font-size:34px}.craft-head h2{font-size:32px}
+@media (prefers-reduced-motion:reduce){.act{transition:none}#wBack:hover,#next:hover{transform:none}}
