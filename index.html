@@ -15,10 +15,11 @@
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="preload" as="image" href="images/stamp.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500&family=Instrument+Serif&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/open-sauce-sans@5.3.0/600.css" rel="stylesheet">
 <script>try{const t=localStorage.getItem('snaily-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
-<link rel="stylesheet" href="css/app.css">
+<!-- bump ?v= when css/js change, so browsers drop their cached copies -->
+<link rel="stylesheet" href="css/app.css?v=14">
 </head>
 <body class="intro">
 <header class="top">
@@ -36,17 +37,13 @@
     <div class="env" id="env" aria-hidden="true"></div>
     <div class="craft-head">
       <h2>Craft Your Postcard</h2>
-      <button class="shuffle" id="shuffle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c2.2 0 3.4 1.2 4.5 3l3 5c1 1.6 2.2 2 3.7 2H21M3 17h3c1.5 0 2.5-.6 3.4-1.6M21 7h-3.8c-1.5 0-2.5.6-3.4 1.6M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>randomize</button>
+      <button class="shuffle" id="shuffle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c2.2 0 3.4 1.2 4.5 3l3 5c1 1.6 2.2 2 3.7 2H21M3 17h3c1.5 0 2.5-.6 3.4-1.6M21 7h-3.8c-1.5 0-2.5.6-3.4 1.6M18 4l3 3-3 3M18 14l3 3-3 3"/></svg><span>randomize</span></button>
     </div>
     <div id="stage"><canvas id="gl" aria-label="Postcards. Swipe sideways for other designs, tap to flip."></canvas><textarea id="ed" aria-label="write on the card" spellcheck="false"></textarea></div>
     <p class="cname" id="cname" aria-live="polite"></p>
+    <button class="flip" id="flip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg><span>write on the back</span></button>
     <div class="bar">
       <p class="hint" id="hint" aria-hidden="true"></p>
-      <!-- back sits over the colours, next over the stamps: plain arrows with quiet words -->
-      <div class="acts">
-        <button class="act" id="wBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>back</span></button>
-        <button class="act" id="next" aria-label="next: add photos"><span>next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      </div>
       <!-- after Lost Post: colours on the left, stamps on the right -->
       <div class="tray">
         <div class="sec">
@@ -63,18 +60,86 @@
           <div class="pop right" id="pStamps" role="group" aria-label="All stamps" hidden></div>
         </div>
       </div>
+      <!-- back / next sit under the colours and stamps, in the same spot as on the photo board -->
+      <div class="acts">
+        <button class="act" id="wBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>back</span></button>
+        <button class="act" id="next" aria-label="next: add photos"><span>next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
     </div>
   </section>
 
   <section class="view" id="v-board" aria-label="Photo board">
-    <div class="board-head"><h2 id="bDate">today</h2><span class="muted" id="bCount"></span></div>
+    <!-- layout switch (after Instagram's bottom bar): a glassy pill, a thumb slides under the pick -->
+    <div class="board-head">
+      <div class="lay" role="group" aria-label="Photo layout">
+        <span class="lay-thumb" aria-hidden="true"></span>
+        <button data-lay="grid" aria-label="Grid" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg></button>
+        <button data-lay="collage" aria-label="Collage" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="10" height="10" rx="1.5" transform="rotate(-8 8.5 10.5)"/><rect x="10" y="3.5" width="9.5" height="9.5" rx="1.5" transform="rotate(6 14.75 8.25)"/><rect x="8.5" y="10.5" width="10" height="10" rx="1.5" transform="rotate(-3 13.5 15.5)"/></svg></button>
+      </div>
+      <span class="sr" id="bCount" aria-live="polite"></span>
+    </div>
     <div class="board" id="board"></div>
     <input type="file" id="bFile" accept="image/*" multiple hidden>
-    <div class="board-foot"><span class="benv" id="bEnv" aria-hidden="true"></span><button class="btn solid" id="bNext" disabled>next →</button></div>
+    <!-- same back / next as the write view; between them the open envelope and a small + for more photos.
+         Drag a photo onto the trash beside the + to delete it -->
+    <div class="acts board-foot">
+      <button class="act" id="bBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>back</span></button>
+      <div class="bmid"><button class="benv" id="bEnv" aria-label="show your postcard" aria-expanded="false"></button><div class="bpeek" id="bPeek" aria-hidden="true"><canvas class="pc back" width="276" height="408"></canvas><canvas class="pc front" width="276" height="408"></canvas></div><button class="badd" id="bAdd" aria-label="add photos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg></button><span class="btrash" id="bTrash" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg></span></div>
+      <button class="act" id="bNext" aria-label="next: review and send" disabled><span>next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
   </section>
 
-  <section class="view" id="v-sent" aria-label="Review and send">
-    <div class="empty"><h2>review &amp; send</h2><p class="muted">coming next.</p></div>
+  <section class="view" id="v-sent" aria-label="Review your postcard">
+    <!-- the finished postcard: the crafted card with the photos piled on top, the message on the back (js/collage.js, js/preview.js) -->
+    <div class="craft-head">
+      <h2>Your Postcard</h2>
+      <div class="p-tools">
+      <button class="shuffle" id="pShuffle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c2.2 0 3.4 1.2 4.5 3l3 5c1 1.6 2.2 2 3.7 2H21M3 17h3c1.5 0 2.5-.6 3.4-1.6M21 7h-3.8c-1.5 0-2.5.6-3.4 1.6M18 4l3 3-3 3M18 14l3 3-3 3"/></svg><span>randomize</span></button>
+      <button class="shuffle" id="pArrange" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg><span>arrange</span></button>
+      </div>
+    </div>
+    <div id="pStage"><canvas id="pgl" aria-label="Your postcard: your photos on the front of your card, your message on the back. Drag to turn it, tap to flip. Use arrange to move the photos."></canvas></div>
+    <button class="flip" id="pFlip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg><span>see the back</span></button>
+    <div class="bar">
+      <div class="acts">
+        <button class="act" id="pBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg><span>back</span></button>
+        <button class="act" id="pNext" aria-label="next: send it" aria-haspopup="dialog"><span>next</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+    <!-- send sheet: who it's from and when it arrives, then the link to share (js/preview.js) -->
+    <div class="sheet" id="pSheet" hidden>
+      <div class="sheet-scrim" id="pScrim"></div>
+      <div class="sheet-body" role="dialog" aria-modal="true" aria-labelledby="pSheetH">
+        <form class="sheet-form" id="pForm">
+          <h3 id="pSheetH">send your postcard</h3>
+          <label class="fld"><span>from</span><input id="pFrom" maxlength="40" placeholder="your name" autocomplete="given-name" enterkeyhint="send"></label>
+          <div class="seg" role="group" aria-label="When it arrives"><button type="button" data-when="now" aria-pressed="true">now</button><button type="button" data-when="snail" aria-pressed="false">by snail 🐌</button></div>
+          <p class="muted when" id="pWhen"></p>
+          <button class="primary" type="submit" id="pSend">send</button>
+        </form>
+        <div class="sheet-done" id="pDone" aria-live="polite">
+          <h3>posted!</h3>
+          <p class="muted"></p>
+          <button class="primary" type="button" id="pShare">share the link</button>
+          <div class="acts"><button class="act" type="button" id="pCopy"><span>copy link</span></button><button class="act" type="button" id="pFinish"><span>done</span></button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- a postcard link (?p=<id>): what the person you sent it to sees (js/open.js) -->
+  <section class="view" id="v-open" aria-label="A postcard for you" data-state="loading">
+    <p class="open-from" id="oFrom" aria-live="polite"></p>
+    <div id="oStage"><canvas id="ogl" aria-label="Your postcard. Drag to turn it, tap to flip it over."></canvas></div>
+    <div class="open-msg" id="oWait"><div class="open-snail" aria-hidden="true"></div><h2>on its way</h2><p id="oWaitTxt"></p><p class="muted" id="oCount" aria-live="off"></p></div>
+    <div class="open-msg" id="oLost"><div class="open-snail" aria-hidden="true"></div><h2>this postcard got lost</h2><p class="muted" id="oLostTxt">check the link, or ask them to send it again.</p></div>
+    <button class="flip" id="oFlip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg><span>see the back</span></button>
+    <div class="bar">
+      <div class="acts">
+        <button class="act" id="oSave"><span>keep it</span></button>
+        <a class="act" id="oMake" href="./"><span>make your own</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
   </section>
 
   <section class="view" id="v-gallery" aria-label="Postcards">
@@ -102,27 +167,54 @@
 </nav>
 <div class="focus" id="focus" hidden>
   <div class="scrim" id="fScrim"></div>
-  <div class="f-body" role="dialog" aria-modal="true" aria-label="Photo and caption">
-    <img class="f-photo" id="fPhoto" alt="">
-    <div class="bubble" id="fBubble">
-      <svg class="tail" viewBox="0 0 40 26" aria-hidden="true"><path d="M3 25 C12 18 18 9 20 2 C24 10 30 18 38 25" /></svg>
-      <label class="sr" for="fCap">caption</label>
-      <textarea id="fCap" rows="3" maxlength="120" placeholder="what happened here?" spellcheck="true"></textarea>
-      <span class="count" id="fCount" aria-hidden="true"></span>
+  <div class="f-body" role="dialog" aria-modal="true" aria-label="Photo. Tap outside to close." tabindex="-1">
+    <!-- the open photo as a polaroid: the caption is written on the strip under it -->
+    <div class="f-card" id="fCard">
+      <div class="f-pic"><img class="f-photo" id="fPhoto" alt=""><canvas class="f-ink" id="fInk" aria-label="Draw on the photo"></canvas></div>
+      <div class="f-strip"><label class="sr" for="fCap">caption</label><textarea id="fCap" rows="2" maxlength="120" placeholder="write a caption…" spellcheck="true"></textarea></div>
     </div>
-    <div class="f-actions"><button class="link" id="fReplace">replace</button><button class="link" id="fRemove">remove</button><button class="btn solid" id="fDone">done</button></div>
+    <!-- marker options: shown while the marker is up -->
+    <div class="ink-opts" id="inkOpts" role="group" aria-label="Marker options">
+      <button class="ink-c" data-c="#6C2C25" style="--c:#6C2C25" aria-label="brown ink" aria-pressed="false"></button><button class="ink-c" data-c="#EB5E3A" style="--c:#EB5E3A" aria-label="red ink" aria-pressed="false"></button><button class="ink-c" data-c="#7CA2E0" style="--c:#7CA2E0" aria-label="blue ink" aria-pressed="false"></button><button class="ink-c" data-c="#fffdf4" style="--c:#fffdf4" aria-label="white ink" aria-pressed="false"></button><span class="ink-sep" aria-hidden="true"></span><button class="ink-s" data-s="3" style="--s:3px" aria-label="thin line" aria-pressed="false"><i></i></button><button class="ink-s" data-s="6" style="--s:6px" aria-label="medium line" aria-pressed="false"><i></i></button><button class="ink-s" data-s="11" style="--s:11px" aria-label="thick line" aria-pressed="false"><i></i></button><span class="ink-sep" aria-hidden="true"></span><button class="ink-undo" id="inkUndo" aria-label="Undo last line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+    </div>
+    <!-- tools peek up from the bottom edge (after PamPam): the picked one rises. Plain SVG so they can be redrawn later -->
+    <div class="tools" role="group" aria-label="Tools">
+      <button class="tool" id="tMarker" data-tool="marker" aria-pressed="false" aria-label="Marker"><svg viewBox="0 0 60 172" aria-hidden="true"><g stroke="#6C2C25" stroke-width="2.6" stroke-linejoin="round">
+<rect x="12" y="58" width="36" height="110" rx="6" fill="#fffdf4"/><rect x="12" y="80" width="36" height="36" fill="var(--ink,#EB5E3A)"/>
+<rect x="9" y="50" width="42" height="10" rx="3" fill="#6C2C25"/><rect x="12" y="4" width="36" height="48" rx="9" fill="var(--ink,#EB5E3A)"/>
+<rect x="40" y="10" width="7" height="34" rx="3.5" fill="#fffdf4"/></g>
+<rect x="17" y="62" width="5" height="100" rx="2.5" fill="#fff" opacity=".7"/><rect x="17" y="9" width="5" height="36" rx="2.5" fill="#fff" opacity=".35"/></svg></button>
+      <button class="tool" id="tSwap" aria-label="Replace photo"><svg viewBox="0 0 110 120" aria-hidden="true"><g stroke="#6C2C25" stroke-width="2.6" stroke-linejoin="round">
+<g transform="rotate(-9 40 70)"><rect x="8" y="30" width="62" height="76" rx="3" fill="#fffdf4"/><rect x="15" y="37" width="48" height="46" fill="#9bc28a"/></g>
+<g transform="rotate(7 66 74)"><rect x="36" y="36" width="62" height="76" rx="3" fill="#fffdf4"/><rect x="43" y="43" width="48" height="46" fill="#7CA2E0"/></g>
+<circle cx="80" cy="24" r="20" fill="#EB5E3A"/></g>
+<g fill="none" stroke="#fffdf4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M70 20a11 11 0 0 1 19-3M90 28a11 11 0 0 1-19 3"/><path d="M90 11v6h-6M70 37v-6h6"/></g></svg></button>
+      <button class="tool" id="tType" data-tool="type" aria-pressed="false" aria-label="Caption"><svg viewBox="0 0 130 122" aria-hidden="true"><g stroke="#6C2C25" stroke-width="2.6" stroke-linejoin="round">
+<path d="M36 50V5h58v45" fill="#fffdf4"/><path d="M46 18h38M46 28h28" stroke-linecap="round" opacity=".45"/>
+<path d="M16 60h98l12 54q0 5-5 5H9q-5 0-5-5z" fill="#7CA2E0"/>
+<rect x="20" y="44" width="90" height="16" rx="8" fill="#6C2C25"/><circle cx="15" cy="52" r="8" fill="#EB5E3A"/><circle cx="115" cy="52" r="8" fill="#EB5E3A"/>
+<g fill="#fffdf4" stroke-width="2"><circle cx="24" cy="76" r="4.6"/><circle cx="36" cy="76" r="4.6"/><circle cx="48" cy="76" r="4.6"/><circle cx="60" cy="76" r="4.6"/><circle cx="72" cy="76" r="4.6"/><circle cx="84" cy="76" r="4.6"/><circle cx="96" cy="76" r="4.6"/><circle cx="108" cy="76" r="4.6"/><circle cx="18" cy="90" r="4.6"/><circle cx="30" cy="90" r="4.6"/><circle cx="42" cy="90" r="4.6"/><circle cx="54" cy="90" r="4.6"/><circle cx="66" cy="90" r="4.6"/><circle cx="78" cy="90" r="4.6"/><circle cx="90" cy="90" r="4.6"/><circle cx="102" cy="90" r="4.6"/><circle cx="114" cy="90" r="4.6"/><circle cx="30" cy="104" r="4.6"/><circle cx="42" cy="104" r="4.6"/><circle cx="54" cy="104" r="4.6"/><circle cx="66" cy="104" r="4.6"/><circle cx="78" cy="104" r="4.6"/><circle cx="90" cy="104" r="4.6"/><circle cx="102" cy="104" r="4.6"/></g></g><path d="M22 64h86" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg></button>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="intro" aria-hidden="true"><div id="shake"><div class="ink"></div><div id="stampWrap"><div class="stamp full"></div><div class="stamp empty"></div></div></div></div>
 <div id="fly" aria-hidden="true"><div class="fx"><div class="fy"><div class="fs"><div class="fq"><div class="fr"></div></div></div></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="js/store.js"></script>
-<script src="js/designs.js"></script>
-<script src="js/postcard.js"></script>
-<script src="js/shell.js"></script>
-<script src="js/craft.js"></script>
-<script src="js/board.js"></script>
-<script src="js/send.js"></script>
+<script src="js/store.js?v=14"></script>
+<script src="js/designs.js?v=14"></script>
+<script src="js/postcard.js?v=14"></script>
+<script src="js/shell.js?v=14"></script>
+<script src="js/craft.js?v=14"></script>
+<script src="js/ink.js?v=14"></script>
+<script src="js/board.js?v=14"></script>
+<script src="js/send.js?v=14"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/net.js?v=14"></script>
+<script src="js/collage.js?v=14"></script>
+<script src="js/card3d.js?v=14"></script>
+<script src="js/preview.js?v=14"></script>
+<script src="js/open.js?v=14"></script>
 </body>
 </html>

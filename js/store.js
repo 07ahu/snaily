@@ -13,11 +13,11 @@ const Store=(()=>{
   return dbp}
  const store=async(name,mode='readonly')=>(await db()).transaction(name,mode).objectStore(name);
  const id=p=>p+Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>b.toString(16).padStart(2,'0')).join('');
- const fresh=()=>{const now=new Date().toISOString();return{id:id('d_'),createdAt:now,updatedAt:now,design:0,paper:null,ink:null,stamp:0,to:'',message:'',photos:[]}};
+ const fresh=()=>{const now=new Date().toISOString();return{id:id('d_'),createdAt:now,updatedAt:now,design:0,paper:null,ink:null,stamps:[{i:0,spot:0}],to:'',message:'',photos:[]}};
 
  async function load(){
   if(draft)return draft;
-  try{const all=await req((await store('drafts')).getAll());draft=all.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]||fresh()}
+  try{const all=await req((await store('drafts')).getAll());draft=all.filter(d=>!d.sentId).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0]||fresh()}
   catch(e){draft=fresh()}
   return draft}
  async function flush(){clearTimeout(timer);timer=null;if(!draft)return;try{await req((await store('drafts','readwrite')).put(draft))}catch(e){}}
@@ -50,6 +50,13 @@ const Store=(()=>{
   try{const r=await req((await store('blobs')).get(blobId));if(!r)return'';const u=URL.createObjectURL(new Blob([r.data],{type:r.type}));urls.set(blobId,u);return u}
   catch(e){return''}}
  async function dropBlob(blobId){try{await req((await store('blobs','readwrite')).delete(blobId))}catch(e){}if(urls.has(blobId)){URL.revokeObjectURL(urls.get(blobId));urls.delete(blobId)}}
+ /* once sent: the draft is kept as a record (its photos are uploaded, so their bytes go) and a fresh one starts */
+ async function finish(sentId){if(!draft)return;const old=draft;old.sentId=sentId;old.updatedAt=new Date().toISOString();await flush();
+  for(const p of old.photos)await dropBlob(p.blobId);old.photos=[];draft=old;await flush();draft=fresh();await flush()}
+ /* postcards sent from / opened on this device, newest first (small: an id, link, dates and a thumbnail) */
+ const list=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}};
+ const add=(k,item)=>{const l=list(k).filter(x=>x.id!==item.id);l.unshift(item);try{localStorage.setItem(k,JSON.stringify(l.slice(0,100)))}catch(e){}};
  addEventListener('pagehide',flush);
- return{MAX_PHOTOS,load,save,flush,putPhoto,url,dropBlob,get draft(){return draft}};
+ return{MAX_PHOTOS,load,save,flush,putPhoto,url,dropBlob,finish,get draft(){return draft},
+  sent:()=>list('snaily-sent'),addSent:x=>add('snaily-sent',x),received:()=>list('snaily-received'),addReceived:x=>add('snaily-received',x)};
 })();

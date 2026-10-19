@@ -1,0 +1,32 @@
+/* ---------- opening a postcard link (?p=<id>) ----------
+   What the person you sent it to sees, in any browser and without the app: who it's from, then
+   the card rises in and they can turn it over. A snail card that hasn't arrived shows the snail
+   still on its way with a countdown, and opens itself when it's due. */
+(function(){
+ if(!OPENING)return;
+ const id=OPENING,view=$('#v-open'),fromEl=$('#oFrom'),waitTxt=$('#oWaitTxt'),count=$('#oCount'),lostTxt=$('#oLostTxt'),flipEl=$('#oFlip'),saveB=$('#oSave');
+ const state=s=>{view.dataset.state=s};
+ const img=src=>new Promise((res,rej)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>res(i);i.onerror=rej;i.src=src});
+ const canvasOf=i=>{const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;c.getContext('2d').drawImage(i,0,0);return c};
+ const left=ms=>{const s=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s/60)%60;return h?`${h}h ${m}m to go`:m?`${m}m ${s%60}s to go`:`${s}s to go`};
+ let card=null,timer=null;
+
+ async function go(){state('loading');fromEl.textContent='opening your postcard…';
+  if(!Net.on){lostTxt.textContent="this copy of snaily can't reach the post office.";return state('lost')}
+  let pc;try{pc=await Net.open(id)}catch(e){console.warn(e);lostTxt.textContent="couldn't reach the post office. check your connection and try again.";return state('lost')}
+  if(!pc)return state('lost');
+  fromEl.textContent=`a postcard from ${pc.sender||'someone'}`;
+  if(!pc.arrived){state('wait');
+   waitTxt.textContent='the snail is still carrying it. it arrives '+pc.deliverAt.toLocaleString([],{weekday:'long',hour:'numeric',minute:'2-digit'})+'.';
+   clearInterval(timer);const t=()=>{const ms=pc.deliverAt-Date.now();count.textContent=left(ms);if(ms<=0){clearInterval(timer);setTimeout(go,1500)}};t();timer=setInterval(t,1000);return}
+  let f,b;try{[f,b]=await Promise.all([img(pc.front),img(pc.back)])}catch(e){lostTxt.textContent="the pictures didn't load. try again in a moment.";return state('lost')}
+  const fc=canvasOf(f),bc=canvasOf(b);state('card');
+  card=Card3D($('#oStage'),$('#ogl'),fc,bc);card.onSide=s=>{flipEl.querySelector('span').textContent=s?'see the front':'see the back'};
+  card.pop=matchMedia('(prefers-reduced-motion:reduce)').matches?0:1;card.show(true);flipEl.onclick=()=>card.flip();
+  // keep a copy in this device's postcards
+  const saved=Store.received().some(x=>x.id===id);saveB.disabled=saved;saveB.querySelector('span').textContent=saved?'saved ✓':'keep it';
+  saveB.onclick=()=>{const t=document.createElement('canvas');t.width=230;t.height=340;t.getContext('2d').drawImage(fc,0,0,230,340);
+   Store.addReceived({id,url:Net.link(id),from:pc.sender,openedAt:new Date().toISOString(),thumb:t.toDataURL('image/jpeg',.7)});
+   saveB.disabled=true;saveB.querySelector('span').textContent='saved ✓'}}
+ go();
+})();

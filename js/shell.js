@@ -1,12 +1,18 @@
 /* ---------- app shell: routing, nav, settings ---------- */
-const VIEWS=['home','write','board','sent','gallery','settings'],PARENT={write:'home',board:'write',sent:'board'},body=document.body;
+const VIEWS=['home','write','board','sent','gallery','settings','open'],PARENT={write:'home',board:'write',sent:'board'},body=document.body;
 const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
-function route(){const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'home';
+// the home tab remembers where you were in the postcard flow (home, write, board, sent), like Instagram tabs keep their place
+let lastHome='home';
+// a postcard link (?p=<id>) opens just that postcard (js/open.js): no tabs, no intro
+const OPENING=new URLSearchParams(location.search).get('p');if(OPENING)body.classList.add('viewing');
+function route(){const v=OPENING?'open':VIEWS.includes(location.hash.slice(1))&&location.hash!=='#open'?location.hash.slice(1):'home';
+ if(v==='home'||PARENT[v])lastHome=v;
  $$('.view').forEach(el=>el.classList.toggle('on',el.id==='v-'+v));
  $$('.tab').forEach(t=>{const cur=t.dataset.go===(PARENT[v]?'home':v);cur?t.setAttribute('aria-current','page'):t.removeAttribute('aria-current')});
  body.dataset.view=v;setWrite(v==='write');dispatchEvent(new CustomEvent('snaily:view',{detail:v}))}
 addEventListener('hashchange',route);
-$$('.tab').forEach(t=>t.onclick=()=>{location.hash=t.dataset.go});
+// tapping home while already in the flow pops back to the home screen; from another tab it returns to the saved spot
+$$('.tab').forEach(t=>t.onclick=()=>{const g=t.dataset.go;location.hash=g==='home'&&t.getAttribute('aria-current')!=='page'?lastHome:g});
 // the write view has its own back, down by the colours
 const wBack=$('#wBack');if(wBack)wBack.onclick=()=>{location.hash='home'};
 const h=new Date().getHours();$('#greet').textContent=h<12?'good morning':h<18?'good afternoon':'good evening';
@@ -19,16 +25,20 @@ route();
 
 /* ---------- intro: stamp thump, snail hops into the logo ---------- */
 (function intro(){
+ if(OPENING){$('#intro').remove();$('#fly').remove();body.classList.remove('intro');return}
  const ov=$('#intro'),shake=$('#shake'),wrap=$('#stampWrap'),full=$('.stamp.full'),empty=$('.stamp.empty'),ink=$('.ink'),fly=$('#fly'),logo=$('#logo');
  const [fx,fy,fs,fq,fr]=['.fx','.fy','.fs','.fq','.fr'].map(c=>fly.querySelector(c));
  const SNAIL_BOX=[.1953,.2017,.8375,.792],SNAIL_AR=480/334,TILT=-3;
  const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
- let done=false;
+ const cta=$('#v-home .primary');
+ let done=false,mo=null;
  const play=(el,kf,o)=>el.animate(kf,{fill:'forwards',...o}).finished.catch(()=>{});
  const wait=ms=>new Promise(r=>setTimeout(r,ms));
  function finish(){if(done)return;done=true;removeEventListener('keydown',finish);
   document.getAnimations().forEach(a=>{const t=a.effect&&a.effect.target;if(t&&(ov.contains(t)||fly.contains(t)))a.cancel()});
-  ov.remove();fly.remove();logo.style.visibility='';body.classList.remove('intro');body.classList.add('reveal');setTimeout(()=>body.classList.remove('reveal'),900)}
+  ov.remove();fly.remove();logo.style.visibility='';
+  // the morph already put the button in place, so it skips the reveal's rise
+  if(mo){mo.el.remove();cta.style.visibility='';cta.style.animation='none';setTimeout(()=>cta.style.animation='',900)}body.classList.remove('intro');body.classList.add('reveal');setTimeout(()=>body.classList.remove('reveal'),900)}
  // a tap that skips the intro must not also click whatever is underneath
  ov.addEventListener('pointerdown',()=>{const t=performance.now(),eat=e=>{if(performance.now()-t<500){e.stopPropagation();e.preventDefault()}removeEventListener('click',eat,true)};addEventListener('click',eat,true);finish()});
  addEventListener('keydown',finish);
@@ -72,7 +82,9 @@ route();
   const lr=logo.getBoundingClientRect(),dx=lr.left-x0,dy=lr.top-y0,sT=lr.width/bw;
   const hops=[{f:.62,g:.06,peak:90,d:360},{f:.96,g:.16,peak:60,d:320},{f:1,g:1,peak:46,d:440}];
   let pxs=px,pys=py,ps=P;
-  play(wrap,[{transform:`scale(1) rotate(${TILT}deg)`,opacity:1},{transform:`scale(.9) rotate(${TILT}deg)`,opacity:0}],{duration:320,delay:hops[0].d-60,easing:'ease-in'});
+  // meanwhile the empty stamp morphs into the write button (or just fades if the button isn't showing)
+  if(cta&&cta.getClientRects().length)setTimeout(morph,160);
+  else play(wrap,[{transform:`scale(1) rotate(${TILT}deg)`,opacity:1},{transform:`scale(.9) rotate(${TILT}deg)`,opacity:0}],{duration:320,delay:hops[0].d-60,easing:'ease-in'});
   for(const [i,hp] of hops.entries()){if(done)return;
    const nx=px+(dx-px)*hp.f,ny=py+(dy-py)*hp.g,ns=P+(sT-P)*hp.f,top=Math.max(Math.min(pys,ny)-hp.peak,6-y0);
    if(i===2)play(ov,[{backgroundColor:getComputedStyle(ov).backgroundColor},{backgroundColor:'transparent'}],{duration:hp.d+60})
@@ -84,5 +96,20 @@ route();
    pxs=nx;pys=ny;ps=ns}
   if(done)return;
   await play(fq,[{transform:'scale(1.14,.84)'},{transform:'scale(.97,1.04)',offset:.5},{transform:'scale(1,1)'}],{duration:180});
-  logo.style.visibility='';finish()}
+  logo.style.visibility='';if(mo)await mo.done;finish()}
+
+ // swaps the stamp for a look-alike #morph and flows it into the button's spot, squashing as it lands
+ function morph(){if(done)return;
+  const sr=shake.getBoundingClientRect(),br=cta.getBoundingClientRect();
+  const el=document.createElement('div');el.id='morph';el.setAttribute('aria-hidden','true');
+  el.innerHTML='<i class="mb"></i><i class="ms"></i><span class="ml"></span>';el.querySelector('.ml').textContent=cta.textContent;
+  Object.assign(el.style,{left:sr.left+'px',top:sr.top+'px',width:sr.width+'px',height:sr.height+'px',transform:`rotate(${TILT}deg)`});
+  body.append(el);wrap.style.visibility='hidden';cta.style.visibility='hidden';
+  const box=(r,sx=1,sy=1)=>({left:r.left+r.width*(1-sx)/2+'px',top:r.top+r.height*(1-sy)/2+'px',width:r.width*sx+'px',height:r.height*sy+'px'});
+  const D=820,o={duration:D,fill:'forwards'};
+  el.animate([{...box(sr),transform:`rotate(${TILT}deg)`,easing:'cubic-bezier(.5,0,.2,1)'},
+   {...box(br,1.06,.86),transform:'rotate(0deg)',offset:.8,easing:'ease-out'},{...box(br),transform:'rotate(0deg)'}],o);
+  el.querySelector('.ms').animate([{opacity:1},{opacity:1,offset:.15},{opacity:0,offset:.55},{opacity:0}],o);
+  el.querySelector('.mb').animate([{opacity:0},{opacity:0,offset:.1},{opacity:1,offset:.5},{opacity:1}],o);
+  mo={el,done:el.querySelector('.ml').animate([{opacity:0},{opacity:0,offset:.6},{opacity:1}],o).finished.catch(()=>{})}}
 })();
